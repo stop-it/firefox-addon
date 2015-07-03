@@ -5,32 +5,46 @@
  - file, You can obtain one at http://mozilla.org/MPL/2.0/.
  -->
 <html>
-<head>
-	<meta charset="utf-8">
-	<title>Stop-It &ndash; Downloading database</title>
-	<link href="download-page.css" type="text/css" rel="stylesheet">
-</head>
-<body>
-	<header>
-		<h1>Stop-It</h1>
-	</header>
-	<div class="content">
-		<h2>Downloading database</h2>
-		<p class="description description-xl">
-			<b>Stop-It Add-on</b> needs to download its unique and extensive 
-			database with URL addresses of sites that should be blocked.
-		</p>
-		<p class="description description-sm">
-			It should takes just few minutes depending on speed of your 
-			internet connection. Don't close this page &ndash; it will 
-			be closed automatically after download will be finished&hellip;
-		</p>
-		<div class="progress-bar">
-			<label>Downloading database file&hellip;</label>
-			<div class="bar">
-				<div class="inner">&nbsp;</div>
+	<head>
+		<meta charset="utf-8">
+		<title>Stop-It &ndash; Downloading database</title>
+		<link href="icon-16.png" type="image/png" rel="shortcut icon">
+		<link href="download-page.css" type="text/css" rel="stylesheet">
+	</head>
+	<body>
+		<header>
+			<h1>Stop-It</h1>
+		</header>
+		<div class="content">
+			<!-- 1. Pane with progress listener -->
+			<div class="pane" id="pane1">
+				<h2>Downloading database</h2>
+				<p class="description description-xl"><b>Stop-It Add-on</b> needs to download its unique and extensive database with URL addresses of sites that should be blocked.</p>
+				<p class="description description-sm">Please wait until download is finished&hellip;</p>
+				<div id="progressBarCont" class="progress-bar">
+					<label>Downloading database file: <span id="progressBarLabel">0 %</span></label>
+					<div class="bar">
+						<div id="progressBar" class="inner">&nbsp;</div>
+					</div>
+				</div>
+			</div>
+			<!-- 2. Pane with success message -->
+			<div class="pane" id="pane2">
+				<h2>Database is downloaded</h2>
+				<p class="description description-xl">Downloading of <b>Stop-It</b> database succeeded. It&nbsp;currently contains more than <b>90.000</b>&nbsp;URL addresses!</p>
+				<p class="description description-xl">Enjoy safer and faster browsing!</p>
+				<div class="button-bar">
+					<button type="button" onclick="closePage()">Close</button>
+				</div>
+			</div>
+			<!-- 3. Pane with error message -->
+			<div class="pane" id="pane2">
+				<h2>Database was <b>not</b> downloaded</h2>
+				<p class="description description-xl">Database was not downloaded but <b>Stop-It Add-on</b> will try it again at the next run.</p>
+				<div class="button-bar">
+					<button type="button" onclick="closePage()">Close</button>
+				</div>
 			</div>
 		</div>
-	</div>
-</body>
+	</body>
 </html>

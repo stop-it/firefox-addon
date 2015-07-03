@@ -75,58 +75,129 @@ body > header h1 {
  * Page contents
  */
 div.content {
+	background-color: #FAFAFA;
 	margin: 0 0 0 0;
 	padding: 0 0 0 0;
 }
-div.content h2 {
-	font-size: 28pt;
-	margin: 0 auto 0 auto;
-	padding: 80px 0 50px 0;
+div.content .pane {
+	background-color: #FFFFFF;
+	border-radius: 2px 2px 2px 2px;
+	box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.26);
+	display: none;
+	margin: 50px auto 0px auto;
+	padding: 90px 0 80px 0;
+	min-width: 600px;
 	width: 60%;
+	z-index: 1;
+}
+div.content .pane h2 {
+	color: rgba(0, 0, 0, 0.87);
+	font-size: 28pt;
+	line-height: 1.0;
+	margin: 0 auto 30px auto;
+	padding: 0 0 0 0;
+	width: 80%;
 	min-width: 400px;
 }
-div.content .description {
-	color: rgba(0, 0, 0, 0.56);
+div.content .pane h2 b {
+	color: #F44336;
+	text-transform: uppercase;
+}
+div.content .pane .description {
+	color: rgba(0, 0, 0, 0.87);
 	line-height: 1.0;
 	margin: 0 auto 0 auto;
 	min-width: 400px;
-	padding: 15px 0 10px 0;
-	width: 60%;
+	padding: 24px 0 24px 0;
+	width: 80%;
 }
-div.content .description-xl {
+div.content .pane .description + p.description {
+	padding-top: 0px;
+}
+div.content .pane .description-xl {
 	font-size: 18pt;
 	line-height: 1.3;
 }
-div.content .description-sm {
+div.content .pane .description-sm {
 	font-size: 12pt;
 }
-div.content .progress-bar {
+div.content .pane .button-bar {
+	margin: 0 auto 0 auto;
+	text-align: right;
+	width: 80%;
+}
+
+/**
+ * Progress bar
+ */
+.progress-bar {
 	margin: 0 auto 0 auto;
 	min-width: 400px;
-	padding: 15px 0 20px 0;
-	width: 60%;
+	padding: 0 0 0 0;
+	width: 80%;
 }
-div.content .progress-bar label {
-	color: rgba(0, 0, 0, 0.28);
+.progress-bar label {
+	color: rgba(0, 0, 0, 0.54);
 	font-size: 10pt;
 }
-div.content .progress-bar .bar {
-	background-color: #C5CAE9;
+.progress-bar label span {
+	float: right;
+}
+.progress-bar .bar {
+	background-color: rgba(63, 81, 181, 0.26);
 	height: 4px;
 	margin: 4px 0px 4px 0px;
+	overflow: hidden;
 	width: 100%;
 }
-div.content .progress-bar .bar .inner {
-	animation-duration: 25s;
-	animation-name: progressBarIsRunning;
+.progress-bar .bar .inner {
 	background-color: #1A237E;
 	height: 4px;
 	margin: 0 0 0 0;
 	padding: 0 0 0 0;
 	width: 0px;
-	
 }
-@keyframes progressBarIsRunning {
-	from { width: 0px; }
-	to { width: 100%; }
+
+/**
+ * Helper class that can be used when we don't know exact progress of the download.
+ */
+.progress-bar .bar .runningBar {
+	animation: setProgressBarRunning 6s linear 1s infinite alternate;
+	margin: 0 0 0 -20%;
+	width: 20%;
 }
+@keyframes setProgressBarRunning { from { margin-left: -20%; } to { margin-left: 100%; } }
+
+/**
+ * Helper classes for showing/hidding elements with CSS animations.
+ */
+.hide {
+	animation-name: hideAnim;
+	animation-duration: 1s;
+	animation-timing-function: ease-out;
+	opacity: 0;
+}
+@keyframes hideAnim { from { opacity: 1; } to { opacity: 0; } }
+.show {
+	animation-name: showAnim;
+	animation-duration: 1s;
+	animation-timing-function: ease-in;
+	opacity: 1;
+}
+@keyframes showAnim { from { opacity: 0; } to { opacity: 1; } }
+
+/**
+ * Buttons
+ */
+button {
+	background-color: transparent;
+	border: 0px none;
+	color: #3F51B5;
+	cursor: pointer;
+	font-size: 18pt;
+	padding: 0 0 0 0 !important;
+	text-transform: uppercase;
+}
+button:hover { text-decoration: underline; }
+button.disabled { color: rgba(63, 81, 181, 0.26); }
+button:hover.disabled { cursor: pointer; text-decoration: none; }

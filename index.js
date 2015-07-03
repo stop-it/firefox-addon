@@ -18,65 +18,16 @@ Cu.import('resource://gre/modules/Task.jsm');
 const DB_DOWNLOAD_URL = 'http://ondrejd.savana-hosting.cz/stop-it/db.sqlite';
 
 /**
- * URL to main add-on's page.
- * @var {String} addonPageUrl
- */
-let addonPageUrl = self.data.url('download-page.html');
-
-/**
  * Holds path to the local copy of Stop-It database.
- * @var {String}
+ * @const {String}
  */
-let databaseFile = OS.Path.join(OS.Constants.Path.profileDir, 'db.sqlite');
-
-console.log(databaseFile);
+const DB_FILE_PATH = OS.Path.join(OS.Constants.Path.profileDir, 'db.sqlite');
 
 /**
- * Download Stop-It database at the first run.
- * @see https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Downloads.jsm
- * @todo Show user message with result of the operation!
+ * URL of our download page.
+ * @var {String} ADDON_PAGE_URL
  */
-function downloadStopItDatabase() {
-	Task.spawn(function () {
-		yield Downloads.fetch(
-			DB_DOWNLOAD_URL, 
-			OS.Path.join(OS.Constants.Path.profileDir, 'db.sqlite')
-		);
-		
-		console.log('Stop-It database has been downloaded.');
-	}).then(null, function (aError) {
-		console.log(aError);
-	});
-} // end downloadStopItDatabase()
-
-/**
- * Remove Stop-It database from the file system.
- * @todo Show user message with result of the operation!
- */
-function removeStopItDatabase() {
-	try {
-		OS.File.remove(DB_DOWNLOAD_URL);
-	} catch (exception) {
-		if (exception instanceof OS.File.Error && exception.becauseNoSuchFile) {
-			// The file does not exist
-			console.log('Stop-It database can not be removed - file does not exist!');
-			console.log(DB_DOWNLOAD_URL);
-		}
-	}
-	// TODO Try also `Task` approach!
-	/*Task.spawn(function () {
-		yield OS.File.remove(DB_DOWNLOAD_URL);
-
-		console.log('Stop-It database has been removed.');
-	}).then(null, function (aError) {
-		console.log(aError);
-		if (aError instanceof OS.File.Error && aError.becauseNoSuchFile) {
-			// The file does not exist
-			console.log('Stop-It database can not be removed - file does not exist!');
-			console.log(DB_DOWNLOAD_URL);
-		}
-	});*/
-} // end removeStopItDatabase()
+const ADDON_PAGE_URL = self.data.url('download-page.html');
 
 /**
  * Prototype object for our listener.
@@ -119,38 +70,103 @@ HttpOnModifyRequestListenerPrototype.prototype = {
 }; // End of HttpOnModifyRequestListenerPrototype.prototype
 
 /**
- * Called when add-on's download page is ready.
- * @param {Tab} aTab
+ * Download Stop-It database at the first run.
+ * @see https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Downloads.jsm
+ * @todo Show user message with result of the operation!
+ * @param {Worker} aWorker
  */
-function onDownloadPageReady(aTab) {
-	let worker = aTab.attach({
-		contentScriptFile: self.data.url('download-page.js'),
-	});
+function downloadDatabase(aWorker) {
+	Task.spawn(function () {
+		let list = yield Downloads.getList(Downloads.PRIVATE);
+		//let list = yield Downloads.getList(Downloads.ALL);
+		let view = {
+			onDownloadChanged: function (aDownload) {
+				if (aDownload.succeeded === true) {
+					aWorker.port.emit('download_succeeded');
+				} else {
+					let downloadInfo = {
+						currentBytes: aDownload.currentBytes,
+						totalBytes: aDownload.totalBytes
+					};
 
-	worker.port.emit('load');
-} // end onDownloadPageReady()
+					if (aDownload.hasProgress === true) {
+						downloadInfo.hasProgress = true;
+						downloadInfo.progress = aDownload.progress;
+					}
+
+					aWorker.port.emit('download_changed', downloadInfo);
+				}
+			}
+		};
+		yield list.addView(view);
+
+		let options = { source: DB_DOWNLOAD_URL, target: DB_FILE_PATH };
+		let download = yield Downloads.createDownload(options);
+		list.add(download);
+
+		download.start();
+		aWorker.port.emit('download_started');
+	}).then(null, Cu.reportError);
+} // end downloadDatabase()
 
 /**
- * Show page that informs about progress of downloading Stop-It database.
+ * Remove Stop-It database from the file system.
+ * @todo Show user message with result of the operation!
  */
-function showDownloadPage() {
-	// Check if page is already opened - if yes bring it to the foreground.
-	for (let i=0; i<tabs.length; i++) {
-		if (tabs[i].url == addonPageUrl) {
-			tabs[i].activate();
-			return;
+function removeDatabase() {
+	try {
+		OS.File.remove(DB_DOWNLOAD_URL);
+	} catch (exception) {
+		if (exception instanceof OS.File.Error && exception.becauseNoSuchFile) {
+			// The file does not exist
+			console.log('Stop-It database can not be removed - file does not exist!');
+			console.log(DB_DOWNLOAD_URL);
 		}
 	}
+	// TODO Try also `Task` approach!
+	/*Task.spawn(function () {
+		yield OS.File.remove(DB_DOWNLOAD_URL);
 
-	// Page is not opened yet - open it
+		console.log('Stop-It database has been removed.');
+	}).then(null, function (aError) {
+		console.log(aError);
+		if (aError instanceof OS.File.Error && aError.becauseNoSuchFile) {
+			// The file does not exist
+			console.log('Stop-It database can not be removed - file does not exist!');
+			console.log(DB_DOWNLOAD_URL);
+		}
+	});*/
+} // end removeDatabase()
+
+/**
+ * Show page that informs about downloading of Stop-It database.
+ */
+function showDownloadPage() {
 	tabs.open({
-		url: addonPageUrl,
-		onReady: onDownloadPageReady
+		url: ADDON_PAGE_URL,
+		/**
+		 * Called when add-on's download page is ready.
+		 * @param {Tab} aTab
+		 */
+		onReady: function onDownloadPageReady(aTab) {
+			// Attach page worker
+			let worker = aTab.attach({
+				contentScriptFile: self.data.url('download-page.js'),
+			});
+
+			// Listen for request for closing download page
+			worker.port.on('close_page', function() {
+				aTab.close();
+			});
+
+			// And start downloading
+			downloadDatabase(worker);
+		} // end onDownloadPageReady(aTab)
 	});
 } // end showDownloadPage()
 
 // Check if exists Stop-It database and download it if not
-if (OS.File.exists(databaseFile) !== true) {
+if (OS.File.exists(DB_FILE_PATH) !== true) {
 	showDownloadPage();
 }
 
