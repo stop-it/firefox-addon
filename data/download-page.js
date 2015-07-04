@@ -10,6 +10,10 @@ self.port.on('download_started', function() {
 
 // Download progress is changed
 self.port.on('download_changed', function(aDownload) {
+	if (aDownload.hasProgress !== true) {
+		return;
+	}
+
 	var bar = document.getElementById('progressBar');
 	bar.style.width = aDownload.progress + '%';
 
@@ -37,8 +41,8 @@ self.port.on('download_succeeded', function() {
 	});
 });
 
-// Download was canceled
-self.port.on('download_canceled', function() {
+// Download was not downloaded
+self.port.on('download_errored', function() {
 	var pane1 = document.getElementById('pane1');
 	pane1.style.display = 'none';
 
